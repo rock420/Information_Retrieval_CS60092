@@ -7,7 +7,7 @@ import pickle
 directory = "./ECT/"
 files = os.listdir(directory)
 dict_corpus = {}
-text_corpus = {}
+filename_map = {}
 
 months = ["January","February","March","April","May","June","July","August","September","October","November","December",""]
 
@@ -55,7 +55,7 @@ def get_participants(p_list):
         if para.strong!=None:
             count+=1
             continue
-        name = para.text.split(' - ')[0]
+        name = para.text
         participants.append(name)
         
     return participants,idx
@@ -69,8 +69,8 @@ def get_presentation_dictionary(p_list):
         idx +=1
         if para.strong!=None:
             if name not in presentation.keys():
-                presentation[name] = ""
-            presentation[name]+=value
+                presentation[name] = []
+            presentation[name].append(value)
             if para.has_attr('id') and para['id']=="question-answer-session":
                 break
             name = para.text
@@ -103,9 +103,10 @@ def get_questionnaire_dictionary(p_list):
     print("Date: {}".format(transcript['Date']))
     print("Participants: ",transcript["Participants"])
     print("\nPresentation\n")
-    for key,value in transcript["Presentation"].items():
-        print("{} :".format(key))
-        print(value)
+    for presenter,statements in transcript["Presentation"].items():
+        print("{} :".format(presenter))
+        for statement in statements:
+            print(statement)
         print("\n")
     print("\nQuestion-Answer :{}\n".format(len(transcript["Questionnaire"])))
     for key,value in transcript["Questionnaire"].items():
@@ -113,20 +114,30 @@ def get_questionnaire_dictionary(p_list):
         print(value["Remark"])
         print("\n")"""
 
-def build_text(filename):
-    with open(filename,'r') as f:
-        html_doc = f.read()
-    soup = BeautifulSoup(html_doc,'html.parser')
+def build_text(dict_transcript,id):
 
-    p_list = soup.find_all('p')
     text = ""
-    for para in p_list:
-        text += para.text+" "
+    text += "Date"+" "+dict_transcript["Date"]+" \n"
+    text += "Participants \n"
+    for participant in dict_transcript["Participants"]:
+        text+=participant+" \n"
+    text += "Presentation \n"
+    for presenter,statements in dict_transcript["Presentation"].items():
+        text += presenter+" \n"
+        for statement in statements:
+            text += statement+" \n"
+    text += "Questionnaire"+" \n"
+    for serial,statement in dict_transcript["Questionnaire"].items():
+        text += str(serial)+" "+statement["Speaker"]+" \n"
+        text += statement["Remark"]+" \n"
 
     return text
 
 
 
+file = 1
+if(not os.path.isdir("./ECTText/")):
+    os.mkdir("./ECTText/")
 
 for filename in files:
     try:
@@ -135,13 +146,15 @@ for filename in files:
         #print(filename)
         #print(e)
         pass
-    dict_corpus[filename] = transcript
-    text = build_text(directory+filename)
-    text_corpus[filename] = text
-
+    filename_map[file] = filename
+    dict_corpus[file] = transcript
+    text = build_text(transcript,file)
+    with open("./ECTText/"+str(file)+".txt","w") as f:
+        f.write(text)
+    file+=1
 
 with open("ECTNestedDict.pkl","wb") as f:
     pickle.dump(dict_corpus,f)
 
-with open("ECTText.pkl","wb") as f:
-    pickle.dump(text_corpus,f)
+with open("FileMap.pkl","wb") as f:
+    pickle.dump(filename_map,f)
