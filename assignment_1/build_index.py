@@ -79,7 +79,14 @@ with open("Inverted_Index.pkl","wb") as f:
 
 
 trie = Trie()
-for term in vocab:
-    trie.insert(term)
+print("\n")
+for t,term in enumerate(vocab):
+    dkey = term+'$'
+    for i in range(len(dkey),0,-1):
+        permuterm = dkey[i:]+dkey[:i]
+        trie.insert(permuterm)
+    sys.stdout.write("\r{0}/{1} terms processed.....".format(t+1,len(vocab)))
+    sys.stdout.flush()
+
 with open("trie.pkl","wb") as f:
     pickle.dump(trie,f)
