@@ -5,11 +5,13 @@ import pickle
 import string
 import os
 import sys
+from trie import Trie
 
 directory = "./ECTText/"
 files = os.listdir(directory)
 files.sort(key=lambda filename: int(filename.split(".")[0]))
 inverted_index = {}
+vocab = set()
 
 """
 inverted_index structure ->
@@ -60,7 +62,7 @@ def build_index(tokens,docId):
         else:
             inverted_index[token] = {'docFreq':1,'posting':[(docId,pos)]}
         terms.add(token)
-
+        vocab.add(token)
 
 
 for file in files:
@@ -69,10 +71,15 @@ for file in files:
         text = f.read()
     tokens = preprocess(text)
     build_index(tokens,docId)
-    sys.stdout.write("\r{0}/{1} files processed...,{2}>".format(docId,len(files),"="*(docId//100)))
+    sys.stdout.write("\r{0}/{1} files indexed...,{2}>".format(docId,len(files),"="*(docId//100)))
     sys.stdout.flush()
-    """if(docId%100==0):
-        print("{} files processed....".format(docId))"""
 
 with open("Inverted_Index.pkl","wb") as f:
     pickle.dump(inverted_index,f)
+
+
+trie = Trie()
+for term in vocab:
+    trie.insert(term)
+with open("trie.pkl","wb") as f:
+    pickle.dump(trie,f)
