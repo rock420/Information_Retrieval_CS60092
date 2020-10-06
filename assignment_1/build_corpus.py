@@ -1,8 +1,8 @@
-import numpy
 import re
 from bs4 import BeautifulSoup
 import os
 import pickle
+import sys
 
 directory = "./ECT/"
 files = os.listdir(directory)
@@ -114,7 +114,7 @@ def get_questionnaire_dictionary(p_list):
         print(value["Remark"])
         print("\n")"""
 
-def build_text(dict_transcript,id):
+def build_text(dict_transcript):
 
     text = ""
     text += "Date"+" "+dict_transcript["Date"]+" \n"
@@ -135,7 +135,7 @@ def build_text(dict_transcript,id):
 
 
 
-file = 1
+docId = 0
 if(not os.path.isdir("./ECTText/")):
     os.mkdir("./ECTText/")
 
@@ -145,13 +145,15 @@ for filename in files:
     except Exception as e:
         #print(filename)
         #print(e)
-        pass
-    filename_map[file] = filename
-    dict_corpus[file] = transcript
-    text = build_text(transcript,file)
-    with open("./ECTText/"+str(file)+".txt","w") as f:
+        continue
+    filename_map[docId] = filename
+    dict_corpus[docId] = transcript
+    text = build_text(transcript)
+    with open("./ECTText/"+str(docId)+".txt","w") as f:
         f.write(text)
-    file+=1
+    docId+=1
+    sys.stdout.write("\r{0}/{1} files processed...,{2}>".format(docId,len(files),"="*(docId//100)))
+    sys.stdout.flush()
 
 with open("ECTNestedDict.pkl","wb") as f:
     pickle.dump(dict_corpus,f)

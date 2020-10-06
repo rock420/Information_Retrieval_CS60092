@@ -3,13 +3,18 @@ from trie import Trie,Node
 import time
 import sys
 
+print("Inverted Index loading....")
+t2 = time.time()
 with open("Inverted_Index.pkl","rb") as f:
     inverted_index = pickle.load(f)
-
-
+print("done!!")
+print("time taken: {}".format(time.time()-t2))
+print("Trie loading....")
+t2 = time.time()
 with open("trie.pkl","rb") as f:
     trie = pickle.load(f)
-
+print("done!!")
+print("time taken: {}".format(time.time()-t2))
 
 
 def wildcard_search(query_term):
@@ -61,6 +66,7 @@ else:
 of = open("result.txt","w")
 count = 0
 tm = 0
+print("start Query..",flush=True)
 with open(query_file,"r") as f:
     for query_term in f:
         count+=1
@@ -71,5 +77,4 @@ with open(query_file,"r") as f:
         of.write(s)
 
 of.close()
-print("avg query time : ",tm/count)
-
+print("avg time per query : ",tm/count)

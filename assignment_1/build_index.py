@@ -71,7 +71,7 @@ for file in files:
         text = f.read()
     tokens = preprocess(text)
     build_index(tokens,docId)
-    sys.stdout.write("\r{0}/{1} files indexed...,{2}>".format(docId,len(files),"="*(docId//100)))
+    sys.stdout.write("\r{0}/{1} files indexed...,{2}>".format(docId+1,len(files),"="*(docId//100)))
     sys.stdout.flush()
 
 with open("Inverted_Index.pkl","wb") as f:
