@@ -46,11 +46,20 @@ inverted_index structure ->
 
 def preprocess(text):
     text = text.lower()             #lower all alphabets 
+    punc_table = str.maketrans({key: None for key in string.punctuation+"–"+"’"})
+    text=text.translate(punc_table)
     text = word_tokenize(text)    #tokenize the text
     stop = set(stopwords.words('english'))            #removing stopwards
     lemma = nltk.stem.WordNetLemmatizer()           #lemmatization of word
-    tokens = [lemma.lemmatize(word) for word in text if word not in string.punctuation+"–"+"’" and word not in stop ]
+    tokens = [lemma.lemmatize(word) for word in text if word not in stop and not isNumeric(word)]
     return tokens
+
+def isNumeric(s):
+    try:
+        float(s)
+        return True
+    except:
+        return False
 
 def build_index(tokens,docId):
     terms = set()
