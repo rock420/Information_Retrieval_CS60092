@@ -1,7 +1,6 @@
 import requests
 import time
 import random
-import csv
 from bs4 import BeautifulSoup
 from collections import OrderedDict
 
@@ -72,12 +71,6 @@ headers_list = [
     }
 ]
 
-ordered_headers_list = []
-for headers in headers_list:
-    h = OrderedDict()
-    for header,value in headers.items():
-        h[header]=value
-    ordered_headers_list.append(h)
 
 
 def generate_random_header():

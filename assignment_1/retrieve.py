@@ -9,6 +9,8 @@ with open("Inverted_Index.pkl","rb") as f:
     inverted_index = pickle.load(f)
 print("done!!")
 print("time taken: {}".format(time.time()-t2))
+
+
 print("Trie loading....")
 t2 = time.time()
 with open("trie.pkl","rb") as f:
