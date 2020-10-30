@@ -81,6 +81,31 @@ def local_Champion_List_Score(Q):
     score_list.sort(reverse=True)
     return score_list[:10]
 
+
+def global_Champion_List_Score(Q):
+    Score = {}
+    Q_norm = 0
+    for term in Q:
+        if term in championListGlobal.keys():
+            idf = inverted_index[term]['idf']
+            Q_norm += idf**2
+            for docId,tf in championListGlobal[term]:
+                if docId not in Score.keys():
+                    Score[docId] = 0
+                Score[docId] += idf*(tf*idf)
+                
+    if(Q_norm==0):
+        return []
+    Q_norm = math.sqrt(Q_norm)
+    score_list = []
+    for docId in Score.keys():
+        score_list.append((Score[docId]/(Q_norm*doc_norm[docId]),docId))
+    
+    ## return top 10 docs
+    score_list.sort(reverse=True)
+    return score_list[:10]
+
+
 def serialize_output(doc_score):
     s = ""
     for score,docId in doc_score:
@@ -97,7 +122,7 @@ else:
 
 of = open("result.txt","w")
 count = 0
-t2 = t4 = 0
+t2 = t4 = t6 = 0
 print("start Query..",flush=True)
 with open(query_file,"r") as f:
     for query in f:
@@ -121,6 +146,14 @@ with open(query_file,"r") as f:
         s = serialize_output(docScore)
         of.write(s)
 
+        t5 = time.time()
+        docScore = global_Champion_List_Score(Q)
+        t6 += (time.time()-t3)
+        print(docScore)
+        s = serialize_output(docScore)
+        of.write(s)
+
 of.close()
 print("avg time per query using inverted index: ",t2/count)
 print("avg time per query using local champiolist: ",t4/count)
+print("avg time per query using global champiolist: ",t6/count)
