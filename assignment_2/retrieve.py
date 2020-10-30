@@ -55,9 +55,31 @@ def tfidf_Score(Q):
     Q_norm = math.sqrt(Q_norm)
     for i in range(N):
         Score[i] = (Score[i]/(Q_norm*doc_norm[i]),i)
-    Score.sort()
+    Score.sort(reverse=True)
     return Score[:10]
 
+def local_Champion_List_Score(Q):
+    Score = {}
+    Q_norm = 0
+    for term in Q:
+        if term in championListLocal.keys():
+            idf = inverted_index[term]['idf']
+            Q_norm += idf**2
+            for docId,tf in championListLocal[term]:
+                if docId not in Score.keys():
+                    Score[docId] = 0
+                Score[docId] += idf*(tf*idf)
+                
+    if(Q_norm==0):
+        return []
+    Q_norm = math.sqrt(Q_norm)
+    score_list = []
+    for docId in Score.keys():
+        score_list.append((Score[docId]/(Q_norm*doc_norm[docId]),docId))
+    
+    ## return top 10 docs
+    score_list.sort(reverse=True)
+    return score_list[:10]
 
 def serialize_output(doc_score):
     s = ""
@@ -75,7 +97,7 @@ else:
 
 of = open("result.txt","w")
 count = 0
-tm = 0
+t2 = t4 = 0
 print("start Query..",flush=True)
 with open(query_file,"r") as f:
     for query in f:
@@ -83,13 +105,22 @@ with open(query_file,"r") as f:
             query = query[:-1]
         of.write(query+"\n")
         count+=1
-        t1 = time.time()
         Q = preprocess_Query(query)
-        doc_score= tfidf_Score(Q)
-        print(doc_score)
-        tm += time.time()-t1
-        s = serialize_output(doc_score)
+
+        t1 = time.time()
+        docScore= tfidf_Score(Q)
+        t2 += (time.time()-t1)
+        print(docScore)
+        s = serialize_output(docScore)
+        of.write(s)
+
+        t3 = time.time()
+        docScore = local_Champion_List_Score(Q)
+        t4 += (time.time()-t3)
+        print(docScore)
+        s = serialize_output(docScore)
         of.write(s)
 
 of.close()
-print("avg time per query : ",tm/count)
+print("avg time per query using inverted index: ",t2/count)
+print("avg time per query using local champiolist: ",t4/count)
