@@ -3,17 +3,29 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize 
 from collections import Counter
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics import f1_score
 import string
 import os
 import sys
 import math
 import numpy as np
 
-data_directory = "./dataset/"
+n = len(sys.argv)
+if n<2:
+    data_directory = "./dataset/"
+    output_file = "result.txt"
+else:
+    data_directory = sys.argv[1]
+    output_file = sys.argv[2]
+
+
 class1_train = [os.path.join(data_directory,'class1','train',f) for f in os.listdir(os.path.join(data_directory,'class1','train')) ]
 class2_train = [os.path.join(data_directory,'class2','train',f) for f in os.listdir(os.path.join(data_directory,'class2','train')) ]
 class1_test =  [os.path.join(data_directory,'class1','test',f) for f in os.listdir(os.path.join(data_directory,'class1','test')) ]
 class2_test =  [os.path.join(data_directory,'class2','test',f) for f in os.listdir(os.path.join(data_directory,'class2','test')) ]
+
+X_test = class1_test+class2_test
+Y_test = [1 for i in range(len(class1_test))] + [2 for i in range(len(class2_test))]
 
 Nc1 = len(class1_train)
 Nc2 = len(class2_train)
@@ -21,7 +33,7 @@ N = Nc1 + Nc2
 
 def preprocess(text):
     text = text.lower()             #lower all alphabets 
-    punc_table = str.maketrans({key: None for key in string.punctuation+"–"+"’"+"…"})
+    punc_table = str.maketrans({key: None for key in string.punctuation+"–"+"’"})
     text = text.translate(punc_table)
     return text
 
@@ -38,19 +50,6 @@ def tokenize(text):
     tokens = [lemma.lemmatize(word) for word in text if word not in stop and not isNumeric(word)]
     return tokens
 
-def F1_Score(class1_predictions,class2_predictions):
-    c1_pred_count = Counter(class1_predictions)
-    c2_pred_count = Counter(class2_predictions)
-    ## class 1 -> positive, class 2->negative
-    TP = c1_pred_count[1]
-    FN = c1_pred_count[2]
-    FP = c2_pred_count[1]
-    TN = c2_pred_count[2]
-    print(TP," ",FP," ",FN," ",TN)
-    Precision = TP/(TP+FP)
-    Recall = TP/(TP+FN)
-    F1 = (2*Precision*Recall)/(Precision+Recall)
-    return F1
 
 class Rocchio:
     def __init__(self,preprocess,tokenize):
@@ -84,19 +83,14 @@ rochhio = Rocchio(preprocess,tokenize)
 rochhio.train(corpus,Nc1,Nc2)
 print("done")
 
-header = "b    0    .01    .05    .1"
+header = "b          0"
 line ="Rocchio"
-for b in [0,0.01,0.05,0.1]:
-    print("predicting test data with b = {}".format(b))
-    class1_predictions = []
-    class2_predictions = []
-    for file in class1_test:
-        class1_predictions.append(rochhio.predict(file,b))
-    for file in class2_test:
-        class2_predictions.append(rochhio.predict(file,b))
-    
-    F1 = F1_Score(class1_predictions,class2_predictions)
-    line += "    "+str(F1)
+predictions = []
+for file in X_test:
+    predictions.append(rochhio.predict(file,b=0))
 
-of = open("result1.txt","w")
-of.write(header+'\n'+line)
+F1 = f1_score(Y_test,predictions,average='macro')
+line += "    "+str(F1)
+
+with open(output_file,"w") as f:
+    f.write(header+'\n'+line)
